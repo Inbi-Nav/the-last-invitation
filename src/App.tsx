@@ -1,28 +1,22 @@
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls } from "@react-three/drei";
-import { Suspense } from "react";
-import Mansion from "./components/Masion";
+import { useState } from "react";
+import StartScreen from "./components/StartScreen";
+
+type Screen = "start" | "lobby";
 
 export default function App() {
-  return (
-    <Canvas
-      camera={{
-        position: [0, 5, 12],
-        fov: 45,
-      }}
-      style={{
-        width: "100vw",
-        height: "100vh",
-     }}
-    >
-      <ambientLight intensity={1.5} />
-      <directionalLight position={[5, 10, 5]} intensity={2} />
+  const [screen, setScreen] = useState<Screen>("start");
 
-      <Suspense fallback={null}>
-        <Mansion />
-      </Suspense>
+  if (screen === "lobby") {
+    return (
+      <main className="lobby-placeholder">
+        <h1>The Last Invitation</h1>
+        <p>Lobby — next phase</p>
+        <button type="button" onClick={() => setScreen("start")}>
+          Return to Start
+        </button>
+      </main>
+    );
+  }
 
-      <OrbitControls />
-    </Canvas>
-  );
+  return <StartScreen onStart={() => setScreen("lobby")} />;
 }
