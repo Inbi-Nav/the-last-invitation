@@ -1,9 +1,12 @@
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Suspense, useCallback, useState } from "react";
 import * as THREE from "three";
-import MansionScene from "../MansionScene";
-import MansionEnvironment, { MoonLayer } from "../MansionEnvironment";
+import MansionScene from "./MansionScene";
+import MansionEnvironment, { MoonLayer } from "./MansionEnvironment";
 import styles from "./StartScreen.module.css";
+import { sound } from "../../audio/SoundEngine";
+import { uiSound, useAmbience } from "../../audio/useSound";
+import SoundToggle from "../ui/SoundToggle";
 
 const LOOK_AT = new THREE.Vector3(1.4, 5.2, 0);
 const CAM_BASE = new THREE.Vector3(-2.4, 2.4, 17);
@@ -36,11 +39,15 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
   const [ready, setReady] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const handleReady = useCallback(() => setReady(true), []);
+  useAmbience("exterior");
 
   const handleStart = () => {
     if (leaving) return;
+    sound.unlock();
+    sound.startSting();
+    sound.flutter();
     setLeaving(true);
-    window.setTimeout(onStart, 900);
+    window.setTimeout(onStart, 1400);
   };
 
   return (
@@ -70,6 +77,10 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
 
       <div className={styles.vignette} />
 
+      <div className={styles.soundToggle}>
+        <SoundToggle />
+      </div>
+
       <div className={styles.ui}>
         <Ornament />
         <h1 className={styles.title}>
@@ -77,7 +88,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
           <span className={styles.big}>Invitation</span>
         </h1>
         <Ornament flip />
-        <button className={styles.start} onClick={handleStart}>
+        <button type="button" className={styles.start} {...uiSound} onClick={handleStart}>
           <span>Start</span>
         </button>
       </div>

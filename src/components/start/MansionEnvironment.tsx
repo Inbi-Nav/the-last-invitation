@@ -2,14 +2,15 @@ import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { fitModel } from "../utils/fitModel";
+import { fitModel } from "../../utils/fitModel";
 import {
   makeBranchTexture,
   makeCloudTexture,
   makeGlowTexture,
   makeGroundTexture,
-} from "../utils/textures";
+} from "../../utils/textures";
 import FlyingBirds from "./FlyingBirds";
+import { sound } from "../../audio/SoundEngine";
 
 const MOON_POS = new THREE.Vector3(-1.2, 20.5, -24);
 
@@ -283,6 +284,10 @@ function Lightning() {
     if (nextStorm.current <= 0 && timer.current <= 0) {
       timer.current = 2.5;
       nextStorm.current = 5 + Math.random() * 5;
+      // crack now, rolling thunder shortly after, sometimes a crow answers
+      sound.thunder(0.05);
+      sound.thunder(1.2);
+      if (Math.random() < 0.5) sound.crow();
     }
     let intensity = 0;
 

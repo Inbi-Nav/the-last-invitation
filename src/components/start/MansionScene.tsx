@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
-import { fitModel } from "../utils/fitModel";
+import { fitModel } from "../../utils/fitModel";
 
 const MODELS = {
   mansion: "/models/mansion.glb",

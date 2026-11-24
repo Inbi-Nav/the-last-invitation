@@ -23,6 +23,13 @@
   inset: 0;
 }
 
+.soundToggle {
+  position: absolute;
+  top: 1.6rem;
+  right: 1.8rem;
+  z-index: 5;
+}
+
 .vignette {
   position: absolute;
   inset: 0;

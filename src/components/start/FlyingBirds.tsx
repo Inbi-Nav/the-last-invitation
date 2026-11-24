@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
+import { sound } from "../../audio/SoundEngine";
 
 interface BirdProps {
   position: [number, number, number];
@@ -13,10 +14,18 @@ function Bird({ position, speed, delay, scale }: BirdProps) {
   const bird = useRef<THREE.Group>(null);
   const leftWing = useRef<THREE.Mesh>(null);
   const rightWing = useRef<THREE.Mesh>(null);
+  const lastLoop = useRef(-1);
 
   useFrame(({ clock }) => {
     const t = clock.elapsedTime * speed + delay;
     const progress = (t % 18) / 18;
+
+    // wing flutter each time this bird starts a new pass across the sky
+    const loop = Math.floor(t / 18);
+    if (lastLoop.current !== -1 && loop !== lastLoop.current) {
+      if (Math.random() < 0.6) sound.flutter();
+    }
+    lastLoop.current = loop;
 
     if (bird.current) {
       bird.current.position.set(
