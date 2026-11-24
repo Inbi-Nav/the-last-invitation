@@ -3,12 +3,7 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { fitModel } from "../../utils/fitModel";
-import {
-  makeBranchTexture,
-  makeCloudTexture,
-  makeGlowTexture,
-  makeGroundTexture,
-} from "../../utils/textures";
+import { makeBranchTexture,  makeCloudTexture, makeGlowTexture, makeGroundTexture,} from "../../utils/textures";
 import FlyingBirds from "./FlyingBirds";
 import { sound } from "../../audio/SoundEngine";
 
@@ -60,13 +55,7 @@ function Stars() {
   }, []);
   return (
     <points geometry={geo}>
-      <pointsMaterial
-        size={0.25}
-        color="#d8c8ff"
-        transparent
-        opacity={0.7}
-        fog={false}
-      />
+      <pointsMaterial size={0.25} color="#d8c8ff" transparent opacity={0.7} fog={false}/>
     </points>
   );
 }
@@ -97,13 +86,7 @@ function Moon() {
     <group position={MOON_POS}>
       <primitive object={moon} position={[0, -1.7, 0]} />
       <sprite scale={[14, 14, 1]} position={[0, 0, -1]}>
-        <spriteMaterial
-          map={glow}
-          transparent
-          depthWrite={false}
-          fog={false}
-          opacity={0.55}
-        />
+        <spriteMaterial map={glow} transparent depthWrite={false} fog={false} opacity={0.55}/>
       </sprite>
     </group>
   );
@@ -137,14 +120,7 @@ function Clouds() {
       {clouds.map((c, i) => (
         <mesh key={i} position={c.p as [number, number, number]}>
           <planeGeometry args={c.s as [number, number]} />
-          <meshBasicMaterial
-            map={textures[c.t]}
-            color={c.c}
-            transparent
-            opacity={c.o}
-            depthWrite={false}
-            fog={false}
-          />
+          <meshBasicMaterial map={textures[c.t]} color={c.c} transparent opacity={c.o} depthWrite={false} fog={false}/>
         </mesh>
       ))}
     </group>
@@ -177,13 +153,7 @@ function GroundFog() {
       {layers.map((l, i) => (
         <mesh key={i} position={[l.x, l.y, l.z]}>
           <planeGeometry args={[l.w, l.w * 0.35]} />
-          <meshBasicMaterial
-            map={tex}
-            color={i % 2 ? "#8a5aa8" : "#6e4a8e"}
-            transparent
-            opacity={0.45}
-            depthWrite={false}
-          />
+          <meshBasicMaterial map={tex} color={i % 2 ? "#8a5aa8" : "#6e4a8e"} transparent opacity={0.45} depthWrite={false}/>
         </mesh>
       ))}
     </group>
@@ -206,31 +176,13 @@ function Branches() {
   const s = h * 0.75;
   return (
     <group ref={group}>
-      <mesh
-        position={[-w / 2 + s / 2 - 0.05, h / 2 - s / 2 + 0.05, -d]}
-        renderOrder={10}
-      >
+      <mesh position={[-w / 2 + s / 2 - 0.05, h / 2 - s / 2 + 0.05, -d]} renderOrder={10}>
         <planeGeometry args={[s, s]} />
-        <meshBasicMaterial
-          map={tex}
-          transparent
-          depthTest={false}
-          fog={false}
-        />
+        <meshBasicMaterial map={tex} transparent depthTest={false} fog={false}/>
       </mesh>
-      <mesh
-        position={[w / 2 - s / 2 + 0.05, h / 2 - s / 2 + 0.05, -d]}
-        scale={[-1, 1, 1]}
-        renderOrder={10}
-      >
+      <mesh position={[w / 2 - s / 2 + 0.05, h / 2 - s / 2 + 0.05, -d]} scale={[-1, 1, 1]} renderOrder={10}>
         <planeGeometry args={[s, s]} />
-        <meshBasicMaterial
-          map={tex}
-          transparent
-          depthTest={false}
-          fog={false}
-          side={THREE.DoubleSide}
-        />
+        <meshBasicMaterial map={tex} transparent depthTest={false} fog={false} side={THREE.DoubleSide}/>
       </mesh>
     </group>
   );
@@ -257,18 +209,8 @@ function Lights() {
     <>
       <hemisphereLight args={["#7a6ad0", "#2a1030", 0.9]} />
       <ambientLight color="#6a4a9a" intensity={0.5} />
-      <directionalLight
-        ref={moonLight}
-        position={MOON_POS.toArray()}
-        color="#a8a4ff"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-      />
-      <directionalLight
-        position={[10, 6, 12]}
-        color="#b04a8a"
-        intensity={0.8}
-      />
+      <directionalLight ref={moonLight} position={MOON_POS.toArray()} color="#a8a4ff" castShadow shadow-mapSize={[1024, 1024]}/>
+      <directionalLight position={[10, 6, 12]} color="#b04a8a" intensity={0.8}/>
     </>
   );
 }

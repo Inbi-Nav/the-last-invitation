@@ -11,7 +11,6 @@ const MODELS = {
   lamp: "/architecture/lamp.glb",
 };
 
-// Scene layout (world units)
 export const LAYOUT = {
   mansionX: 3.4,
   mansionHeight: 12,
@@ -47,7 +46,6 @@ function Mansion() {
   return (
     <group position={[LAYOUT.mansionX, 0, -depth / 2]}>
       <primitive object={model} />
-      {/* Window glow from inside */}
       {[-3, 0, 3].map((x) =>
         [2, 5.5].map((y) => (
           <pointLight key={`${x}-${y}`} position={[x, y, depth / 2 - 0.6]} color="#ff40c8" intensity={6} distance={6} decay={1.6} />

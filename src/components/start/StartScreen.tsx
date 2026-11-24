@@ -53,10 +53,7 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
   return (
     <div className={`${styles.screen} ${leaving ? styles.leaving : ""}`} data-scene-ready={ready || undefined}>
       
-      <Canvas 
-      className={styles.canvas} 
-      shadows dpr={[1, 1.75]} 
-      camera={{ 
+      <Canvas className={styles.canvas} shadows dpr={[1, 1.75]}  camera={{ 
         position: CAM_BASE.toArray(), 
         fov: 42, 
         near: 0.1, far: 200 
