@@ -1,22 +1,11 @@
 import { useState } from "react";
-import StartScreen from "./components/StartScreen";
-
-type Screen = "start" | "lobby";
+import StartScreen from "./components/start/StartScreen";
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("start");
+  const [screen, setScreen] = useState<"start" | "lobby">("start");
 
-  if (screen === "lobby") {
-    return (
-      <main className="lobby-placeholder">
-        <h1>The Last Invitation</h1>
-        <p>Lobby — next phase</p>
-        <button type="button" onClick={() => setScreen("start")}>
-          Return to Start
-        </button>
-      </main>
-    );
-  }
+  // Lobby not implemented yet
+  if (screen === "lobby") return <div style={{ position: "fixed", inset: 0, background: "#000" }} />;
 
   return <StartScreen onStart={() => setScreen("lobby")} />;
 }

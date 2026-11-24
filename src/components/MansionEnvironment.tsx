@@ -1,186 +1,332 @@
-import { Sparkles, Stars, useGLTF } from "@react-three/drei";
-import { useEffect, useMemo } from "react";
-import { useFrame } from "@react-three/fiber";
+import { useMemo, useRef } from "react";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import { fitModel } from "../utils/fitModel";
+import {
+  makeBranchTexture,
+  makeCloudTexture,
+  makeGlowTexture,
+  makeGroundTexture,
+} from "../utils/textures";
+import FlyingBirds from "./FlyingBirds";
 
-const ASSETS = {
-  moon: "/architecture/moon.glb",
-  path: "/architecture/outside-path.glb",
-  railing: "/architecture/outside-railing.glb",
-  lamp: "/architecture/lamp.glb",
-};
+const MOON_POS = new THREE.Vector3(-1.2, 20.5, -24);
 
-type Props = {
-  centerX: number;
-  centerZ: number;
-  frontZ: number;
-  groundY: number;
-  mansionHeight: number;
-};
-
-type FittedAssetProps = {
-  source: THREE.Object3D;
-  position: [number, number, number];
-  maxLength?: number;
-  maxHeight?: number;
-  rotationY?: number;
-  pivot?: "bottom" | "center";
-};
-
-function FittedAsset({
-  source,
-  position,
-  maxLength,
-  maxHeight,
-  rotationY = 0,
-  pivot = "bottom",
-}: FittedAssetProps) {
-  const object = useMemo(() => {
-    const model = source.clone(true);
-    const rotated = new THREE.Group();
-    rotated.add(model);
-    rotated.rotation.y = rotationY;
-    rotated.updateMatrixWorld(true);
-
-    const bounds = new THREE.Box3().setFromObject(rotated);
-    const dimensions = bounds.getSize(new THREE.Vector3());
-    const midpoint = bounds.getCenter(new THREE.Vector3());
-    const factor = maxHeight !== undefined
-      ? maxHeight / Math.max(dimensions.y, 0.001)
-      : maxLength !== undefined
-        ? maxLength / Math.max(dimensions.z, 0.001)
-        : 1;
-
-    const normalized = new THREE.Group();
-    rotated.position.set(-midpoint.x, pivot === "center" ? -midpoint.y : -bounds.min.y, -midpoint.z);
-    normalized.scale.setScalar(factor);
-    normalized.add(rotated);
-    return normalized;
-  }, [source, maxLength, maxHeight, rotationY, pivot]);
-
-  return <primitive object={object} position={position} />;
-}
-
-function BareTree({ position, scale = 1 }: { position: [number, number, number]; scale?: number }) {
-  const segments = useMemo(() => {
-    const branches: { from: THREE.Vector3; to: THREE.Vector3; radius: number }[] = [];
-    const add = (a: [number, number, number], b: [number, number, number], radius: number) => {
-      branches.push({ from: new THREE.Vector3(...a), to: new THREE.Vector3(...b), radius });
-    };
-    add([0, 0, 0], [0.1, 5.4, 0], 0.29);
-    add([0.1, 3.4, 0], [-2.4, 6.5, 0.2], 0.16);
-    add([0.1, 4.5, 0], [2.3, 7.1, -0.4], 0.17);
-    add([0.1, 5.4, 0], [-0.3, 8.9, 0.3], 0.14);
-    add([-2.4, 6.5, 0.2], [-4.6, 8.2, 0], 0.07);
-    add([-2.4, 6.5, 0.2], [-2.9, 9.2, 0.5], 0.07);
-    add([2.3, 7.1, -0.4], [4.5, 9.4, -0.3], 0.07);
-    add([2.3, 7.1, -0.4], [2.5, 10.2, -0.6], 0.07);
-    add([-0.3, 8.9, 0.3], [-1.3, 11.2, 0], 0.055);
-    return branches;
-  }, []);
-
-  return (
-    <group position={position} scale={scale}>
-      {segments.map(({ from, to, radius }, index) => {
-        const vector = new THREE.Vector3().subVectors(to, from);
-        const midpoint = new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5);
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(
-          new THREE.Vector3(0, 1, 0), vector.clone().normalize()
-        );
-        return (
-          <mesh key={index} position={midpoint} quaternion={quaternion}>
-            <cylinderGeometry args={[radius * 0.55, radius, vector.length(), 6]} />
-            <meshStandardMaterial color="#100c17" roughness={1} />
-          </mesh>
-        );
-      })}
-    </group>
+function Sky() {
+  const material = useMemo(
+    () =>
+      new THREE.ShaderMaterial({
+        side: THREE.BackSide,
+        depthWrite: false,
+        fog: false,
+        uniforms: {},
+        vertexShader: `varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }`,
+        fragmentShader: `varying vec3 vP; void main(){
+          float h = clamp(vP.y*1.4+0.1, 0.0, 1.0);
+          vec3 horizon = vec3(0.30,0.14,0.36);
+          vec3 mid = vec3(0.13,0.06,0.20);
+          vec3 top = vec3(0.03,0.02,0.07);
+          vec3 c = mix(horizon, mid, smoothstep(0.0,0.35,h));
+          c = mix(c, top, smoothstep(0.35,1.0,h));
+          gl_FragColor = vec4(c,1.0);
+        }`,
+      }),
+    [],
   );
-}
-
-const mistVertex = ` varying vec2 vUv;
- void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }`;
-
-const mistFragment = `
- uniform float uTime;
-  varying vec2 vUv;
-  void main() {
-    vec2 p = vUv * vec2(7.0, 3.0);
-    float wave = sin(p.x * 2.8 + uTime * 0.15) * sin(p.y * 4.5 - uTime * 0.12);
-    float edge = smoothstep(0.0, 0.3, vUv.y) * (1.0 - smoothstep(0.70, 1.0, vUv.y));
-    edge *= smoothstep(0.0, 0.14, vUv.x) * (1.0 - smoothstep(0.86, 1.0, vUv.x));
-    float opacity = edge * (0.18 + 0.17 * wave);
-    gl_FragColor = vec4(0.48, 0.33, 0.68, max(0.0, opacity));
-  }
-`;
-
-function GroundMist({ position }: { position: [number, number, number] }) {
-  const material = useMemo(() => new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 } },
-    vertexShader: mistVertex,
-    fragmentShader: mistFragment,
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
-  }), []);
-  useFrame(({ clock }) => { material.uniforms.uTime.value = clock.getElapsedTime(); });
-  useEffect(() => () => material.dispose(), [material]);
   return (
-    <mesh position={position} rotation={[-Math.PI / 2, 0, 0]} renderOrder={3}>
-      <planeGeometry args={[24, 12]} />
-      <primitive object={material} attach="material" />
+    <mesh material={material} renderOrder={-10}>
+      <sphereGeometry args={[90, 32, 16]} />
     </mesh>
   );
 }
 
-export default function MansionEnvironment({ centerX, centerZ, frontZ, groundY, mansionHeight }: Props) {
-  const moon = useGLTF(ASSETS.moon);
-  const path = useGLTF(ASSETS.path);
-  const railing = useGLTF(ASSETS.railing);
-  const lamp = useGLTF(ASSETS.lamp);
-  const pathStart = frontZ + 0.35;
-  const pathLength = 6.6;
-  const pathCenter = pathStart + pathLength / 2;
-  const railingRotation = useMemo(() => {
-    const dims = new THREE.Box3().setFromObject(railing.scene).getSize(new THREE.Vector3());
-    return dims.x > dims.z ? Math.PI / 2 : 0;
-  }, [railing.scene]);
-
-  const lamps: [number, number, number][] = [
-    [centerX - 3.3, groundY, pathStart + 0.6],
-    [centerX + 3.3, groundY, pathStart + 0.6],
-    [centerX - 3.8, groundY, pathStart + 4.5],
-    [centerX + 3.8, groundY, pathStart + 4.5],
-  ];
-
+function Stars() {
+  const geo = useMemo(() => {
+    const g = new THREE.BufferGeometry();
+    const pts: number[] = [];
+    for (let i = 0; i < 500; i++) {
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.random() * 0.45 * Math.PI;
+      pts.push(
+        80 * Math.cos(th) * Math.sin(ph),
+        80 * Math.cos(ph),
+        80 * Math.sin(th) * Math.sin(ph),
+      );
+    }
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    return g;
+  }, []);
   return (
-    <group>
-      <Stars radius={75} depth={30} count={450} factor={1.5} fade speed={0.08} />
-      <FittedAsset source={moon.scene} position={[centerX - 8, groundY + mansionHeight + 1.2, centerZ - 4]} maxHeight={2.4} pivot="center"/>
+    <points geometry={geo}>
+      <pointsMaterial
+        size={0.25}
+        color="#d8c8ff"
+        transparent
+        opacity={0.7}
+        fog={false}
+      />
+    </points>
+  );
+}
 
-      <pointLight position={[centerX - 8, groundY + mansionHeight + 1.2, centerZ - 3]} color="#b4a2da" intensity={9} distance={18}/>
-
-      <FittedAsset source={path.scene} position={[centerX, groundY + 0.03, pathCenter]} maxLength={pathLength}/>
-      {[-1, 1].map((side) => (
-        <FittedAsset key={side} source={railing.scene} position={[centerX + side * 3.3, groundY, pathCenter]} maxLength={pathLength} rotationY={railingRotation + (side > 0 ? Math.PI : 0)}/>
-      ))}
-
-      {lamps.map((position, index) => (
-        <group key={index}>
-          <FittedAsset source={lamp.scene} position={position} maxHeight={2.25} />
-          <pointLight  position={[position[0], position[1] + 1.85, position[2]]} color="#ffb16d" intensity={13} distance={6} decay={2}/>
-        </group>
-      ))}
-
-      <BareTree position={[centerX - 10.5, groundY, frontZ + 1.4]} scale={1.15} />
-      <BareTree position={[centerX + 10.5, groundY, frontZ + 1.4]} scale={1.1} />
-      <GroundMist position={[centerX, groundY + 0.12, pathStart + 3]} />
-      <Sparkles count={35} scale={[20, 4, 13]} position={[centerX, groundY + 2.4, pathCenter]} size={1.5} speed={0.11} opacity={0.22} color="#cba3df"/>
+function Moon() {
+  const { scene } = useGLTF("/architecture/moon.glb");
+  const moon = useMemo(() => {
+    const m = fitModel(scene, 3.4, "height");
+    m.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) {
+        const mat = mesh.material as THREE.MeshStandardMaterial;
+        if ("emissive" in mat) {
+          mat.emissive = new THREE.Color("#c9c4ff");
+          mat.emissiveIntensity = 1.8;
+          if (mat.map) mat.emissiveMap = mat.map;
+        }
+        mat.fog = false;
+      }
+    });
+    return m;
+  }, [scene]);
+  const glow = useMemo(
+    () => makeGlowTexture("rgba(220,210,255,0.9)", "rgba(140,90,220,0)"),
+    [],
+  );
+  return (
+    <group position={MOON_POS}>
+      <primitive object={moon} position={[0, -1.7, 0]} />
+      <sprite scale={[14, 14, 1]} position={[0, 0, -1]}>
+        <spriteMaterial
+          map={glow}
+          transparent
+          depthWrite={false}
+          fog={false}
+          opacity={0.55}
+        />
+      </sprite>
     </group>
   );
 }
 
-Object.values(ASSETS).forEach((path) => useGLTF.preload(path));
+function Clouds() {
+  const textures = useMemo(
+    () => [1, 7, 13].map((s) => makeCloudTexture(s)),
+    [],
+  );
+  const group = useRef<THREE.Group>(null);
+  const clouds = useMemo(
+    () => [
+      { p: [-7, 16.5, -20], s: [16, 6], c: "#5a2d7a", o: 0.9, t: 0 },
+      { p: [3, 13.2, -21], s: [14, 5], c: "#43205f", o: 0.85, t: 1 },
+      { p: [-3, 12, -18], s: [11, 4], c: "#6d3a8c", o: 0.7, t: 2 },
+      { p: [9, 18, -24], s: [20, 7], c: "#3a1a52", o: 0.9, t: 0 },
+      { p: [-14, 11, -22], s: [16, 6], c: "#4a2366", o: 0.8, t: 1 },
+      { p: [0, 20, -26], s: [26, 8], c: "#2a1240", o: 0.9, t: 2 },
+    ],
+    [],
+  );
+  useFrame(({ clock }) => {
+    group.current?.children.forEach((c, i) => {
+      c.position.x =
+        clouds[i].p[0] + Math.sin(clock.elapsedTime * 0.05 + i) * 1.2;
+    });
+  });
+  return (
+    <group ref={group}>
+      {clouds.map((c, i) => (
+        <mesh key={i} position={c.p as [number, number, number]}>
+          <planeGeometry args={c.s as [number, number]} />
+          <meshBasicMaterial
+            map={textures[c.t]}
+            color={c.c}
+            transparent
+            opacity={c.o}
+            depthWrite={false}
+            fog={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function GroundFog() {
+  const tex = useMemo(() => makeCloudTexture(21), []);
+  const group = useRef<THREE.Group>(null);
+  const layers = useMemo(
+    () =>
+      Array.from({ length: 14 }, (_, i) => ({
+        x: -10 + ((i * 37) % 24),
+        z: -6 + ((i * 53) % 20),
+        y: 0.3 + (i % 3) * 0.35,
+        w: 10 + (i % 4) * 3,
+        speed: 0.08 + (i % 5) * 0.03,
+      })),
+    [],
+  );
+  useFrame(({ clock, camera }) => {
+    group.current?.children.forEach((m, i) => {
+      const l = layers[i];
+      m.position.x = l.x + Math.sin(clock.elapsedTime * l.speed + i) * 2;
+      m.quaternion.copy(camera.quaternion);
+    });
+  });
+  return (
+    <group ref={group}>
+      {layers.map((l, i) => (
+        <mesh key={i} position={[l.x, l.y, l.z]}>
+          <planeGeometry args={[l.w, l.w * 0.35]} />
+          <meshBasicMaterial
+            map={tex}
+            color={i % 2 ? "#8a5aa8" : "#6e4a8e"}
+            transparent
+            opacity={0.45}
+            depthWrite={false}
+          />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+function Branches() {
+  const tex = useMemo(() => makeBranchTexture(5), []);
+  const { camera, size } = useThree();
+  const group = useRef<THREE.Group>(null);
+  useFrame(() => {
+    if (!group.current) return;
+    group.current.position.copy(camera.position);
+    group.current.quaternion.copy(camera.quaternion);
+  });
+  const persp = camera as THREE.PerspectiveCamera;
+  const d = 4;
+  const h = 2 * d * Math.tan(THREE.MathUtils.degToRad(persp.fov / 2));
+  const w = h * (size.width / size.height);
+  const s = h * 0.75;
+  return (
+    <group ref={group}>
+      <mesh
+        position={[-w / 2 + s / 2 - 0.05, h / 2 - s / 2 + 0.05, -d]}
+        renderOrder={10}
+      >
+        <planeGeometry args={[s, s]} />
+        <meshBasicMaterial
+          map={tex}
+          transparent
+          depthTest={false}
+          fog={false}
+        />
+      </mesh>
+      <mesh
+        position={[w / 2 - s / 2 + 0.05, h / 2 - s / 2 + 0.05, -d]}
+        scale={[-1, 1, 1]}
+        renderOrder={10}
+      >
+        <planeGeometry args={[s, s]} />
+        <meshBasicMaterial
+          map={tex}
+          transparent
+          depthTest={false}
+          fog={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+function Ground() {
+  const tex = useMemo(() => makeGroundTexture(), []);
+  return (
+    <mesh rotation-x={-Math.PI / 2} receiveShadow>
+      <planeGeometry args={[160, 160]} />
+      <meshStandardMaterial map={tex} color="#4a3a58" roughness={0.9} />
+    </mesh>
+  );
+}
+
+function Lights() {
+  const moonLight = useRef<THREE.DirectionalLight>(null);
+  useFrame(({ clock }) => {
+    if (moonLight.current)
+      moonLight.current.intensity =
+        1.6 + Math.sin(clock.elapsedTime * 0.3) * 0.2;
+  });
+  return (
+    <>
+      <hemisphereLight args={["#7a6ad0", "#2a1030", 0.9]} />
+      <ambientLight color="#6a4a9a" intensity={0.5} />
+      <directionalLight
+        ref={moonLight}
+        position={MOON_POS.toArray()}
+        color="#a8a4ff"
+        castShadow
+        shadow-mapSize={[1024, 1024]}
+      />
+      <directionalLight
+        position={[10, 6, 12]}
+        color="#b04a8a"
+        intensity={0.8}
+      />
+    </>
+  );
+}
+
+function Lightning() {
+  const light = useRef<THREE.DirectionalLight>(null);
+  const timer = useRef(0);
+  const nextStorm = useRef(6);
+
+  useFrame((_, delta) => {
+    nextStorm.current -= delta;
+
+    if (nextStorm.current <= 0 && timer.current <= 0) {
+      timer.current = 2.5;
+      nextStorm.current = 5 + Math.random() * 5;
+    }
+    let intensity = 0;
+
+    if (timer.current > 0) {
+      timer.current = Math.max(0, timer.current - delta);
+
+      const elapsed = 2.5 - timer.current;
+      const flash1 = elapsed < 0.15;
+      const flash2 = elapsed > 0.4 && elapsed < 0.65;
+      const flash3 = elapsed > 1.1 && elapsed < 1.35;
+      const flash4 = elapsed > 1.8 && elapsed < 2.15;
+      intensity = flash1 || flash2 || flash3 || flash4 ? 9 : 0.4;
+    }
+
+    if (light.current) {
+      light.current.intensity = intensity;
+    }
+  });
+
+  return (
+    <directionalLight ref={light} position={[-8, 18, 8]} color="#d1d9ff" intensity={0}/>
+  );
+}
+
+export default function MansionEnvironment() {
+  return (
+    <>
+      <color attach="background" args={["#0d0716"]} />
+      <fog attach="fog" args={["#2a1838", 14, 55]} />
+      <Sky />
+      <Stars />
+      <Lights />
+      <Ground />
+      <FlyingBirds />
+      <Clouds />
+      <GroundFog />
+      <Branches />
+      <Lightning />
+    </>
+  );
+}
+
+export function MoonLayer() {
+  return <Moon />;
+}
+
+useGLTF.preload("/architecture/moon.glb");
