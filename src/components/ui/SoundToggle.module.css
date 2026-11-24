@@ -1,0 +1,49 @@
+.toggle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(201, 164, 76, 0.55);
+  background: radial-gradient(
+    circle at 50% 35%,
+    rgba(90, 24, 41, 0.75),
+    rgba(16, 9, 22, 0.85)
+  );
+  color: var(--gold-light);
+  box-shadow:
+    0 0 12px rgba(201, 164, 76, 0.15),
+    inset 0 0 8px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s,
+    border-color 0.2s;
+}
+.toggle:hover {
+  transform: translateY(-1px);
+  border-color: var(--gold);
+  box-shadow:
+    0 0 18px rgba(240, 217, 171, 0.35),
+    inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.toggle {
+  cursor: pointer;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(70, 22, 40, 0.8),
+    rgba(14, 8, 20, 0.9)
+  );
+  box-shadow:
+    0 0 0 3px rgba(14, 8, 20, 0.5),
+    0 0 0 4px rgba(201, 164, 76, 0.3),
+    inset 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+.toggle:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow:
+    0 0 0 3px rgba(14, 8, 20, 0.5),
+    0 0 0 4px rgba(226, 189, 108, 0.7),
+    0 0 18px rgba(240, 217, 171, 0.35);
+}
