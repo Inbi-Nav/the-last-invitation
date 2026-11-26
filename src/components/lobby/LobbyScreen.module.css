@@ -1,0 +1,90 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #0d0716;
+  font-family: var(--font-display);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.ready {
+  opacity: 1;
+}
+
+.canvas {
+  position: absolute !important;
+  inset: 0;
+  filter: saturate(1.22) brightness(1.03);
+}
+
+.grade {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  background: radial-gradient(
+    ellipse at 50% 45%,
+    rgba(150, 70, 255, 0.4),
+    rgba(70, 20, 130, 0.3) 70%
+  );
+}
+
+.vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 50%,
+    transparent 55%,
+    rgba(5, 2, 10, 0.5) 100%
+  );
+}
+
+.logo {
+  position: absolute;
+  top: clamp(0.6rem, 1.6vw, 1.6rem);
+  left: clamp(0.8rem, 1.8vw, 2rem);
+  width: clamp(150px, 22vw, 330px);
+}
+
+.bottomLeft {
+  position: absolute;
+  left: clamp(0.8rem, 1.6vw, 1.8rem);
+  bottom: clamp(0.8rem, 1.6vw, 1.8rem);
+  display: flex;
+  gap: clamp(0.4rem, 1vw, 1rem);
+}
+
+.bottomLeft button {
+  width: clamp(52px, 6vw, 84px);
+  height: clamp(58px, 6.6vw, 92px);
+}
+
+.topRight {
+  position: absolute;
+  top: clamp(0.8rem, 1.6vw, 1.6rem);
+  right: clamp(0.8rem, 1.6vw, 1.8rem);
+  display: flex;
+  gap: clamp(0.4rem, 1vw, 1rem);
+}
+
+.start {
+  position: absolute;
+  right: clamp(0.8rem, 1.6vw, 1.8rem);
+  bottom: clamp(0.8rem, 1.8vw, 2rem);
+}
+
+@media (max-width: 640px) {
+  .start {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .start:hover:not(:disabled) {
+    transform: translateX(-50%) scale(1.04);
+  }
+  .bottomLeft {
+    bottom: 4.5rem;
+  }
+}
