@@ -24,7 +24,6 @@ export default function IntroCinematic({
   const lookAt = useMemo(() => new THREE.Vector3(), []);
   const fill = useRef<THREE.DirectionalLight>(null);
 
-
   useEffect(() => {
     onStart?.();
   }, []);
@@ -37,6 +36,7 @@ export default function IntroCinematic({
   };
 
   useFrame(({ clock }) => {
+    if (done.current) return;
     if (start.current === null) start.current = clock.elapsedTime;
     const t = forced() ?? clock.elapsedTime - start.current;
 
