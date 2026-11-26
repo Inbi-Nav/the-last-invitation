@@ -2,19 +2,19 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { useGLTF } from "@react-three/drei";
 import StartScreen from "./components/start/StartScreen";
 import { PlayerProvider } from "./state/PlayerContext";
-
+import GameScreen from "./components/game/GameScreen";
 const LobbyScreen = lazy(() => import("./components/lobby/LobbyScreen"));
 const PlayerScreen = lazy(() => import("./components/player/PlayerScreen"));
 const InventoryScreen = lazy(
   () => import("./components/inventory/InventoryScreen"),
 );
 
-type Screen = "start" | "lobby" | "player" | "inventory";
+type Screen = "start" | "lobby" | "player" | "inventory" | "game";
 
 function initialScreen(): Screen {
   if (import.meta.env.DEV) {
     const s = new URLSearchParams(location.search).get("screen");
-    if (s === "lobby" || s === "player" || s === "inventory") return s;
+    if (s === "lobby" || s === "player" || s === "inventory" || s === "game" ) return s;
   }
   return "start";
 }
@@ -49,7 +49,7 @@ export default function App() {
             <LobbyScreen
               onInventory={() => setScreen("inventory")}
               onPlayer={() => setScreen("player")}
-              onStart={() => {}}
+              onStart={() => setScreen("game")}
               onExit={() => setScreen("start")}
             />
           )}
@@ -58,6 +58,9 @@ export default function App() {
           )}
           {screen === "inventory" && (
             <InventoryScreen onBack={() => setScreen("lobby")} />
+          )}
+          {screen === "game" && (
+          <GameScreen onExit={() => setScreen("lobby")} />
           )}
         </Suspense>
       )}

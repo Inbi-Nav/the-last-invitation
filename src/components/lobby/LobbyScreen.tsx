@@ -38,7 +38,7 @@ interface Props {
   onExit: () => void;
 }
 
-export default function LobbyScreen({ onInventory, onPlayer, onExit }: Props) {
+export default function LobbyScreen({   onInventory, onPlayer, onStart, onExit, }: Props) {
   const [settings, setSettings] = useState(false);
   const [ready, setReady] = useState(false);
   useAmbience("lobby");
@@ -88,8 +88,8 @@ export default function LobbyScreen({ onInventory, onPlayer, onExit }: Props) {
           <IconExit />
         </IconButton>
       </div>
-      <div className={styles.start} style={{ pointerEvents: "none" }}>
-        <PlateButton onClick={() => {}}>Start Game</PlateButton>
+      <div className={styles.start}>
+        <PlateButton onClick={onStart}> Start Game </PlateButton>
       </div>
 
       {settings && <SettingsModal onClose={() => setSettings(false)} />}

@@ -13,6 +13,7 @@ function tex(c: HTMLCanvasElement) {
   return t;
 }
 
+// Soft radial glow
 export function makeGlowTexture(inner = "rgba(255,255,255,1)", outer = "rgba(255,255,255,0)") {
   const [c, g] = canvas(256, 256);
   const grd = g.createRadialGradient(128, 128, 0, 128, 128, 128);
@@ -23,6 +24,7 @@ export function makeGlowTexture(inner = "rgba(255,255,255,1)", outer = "rgba(255
   return tex(c);
 }
 
+// Puffy cloud / fog blob built from overlapping soft circles
 export function makeCloudTexture(seed = 1) {
   const [c, g] = canvas(512, 256);
   let s = seed;
@@ -40,6 +42,7 @@ export function makeCloudTexture(seed = 1) {
   return tex(c);
 }
 
+// Twisted tree branches silhouette, growing from the left edge
 export function makeBranchTexture(seed = 3) {
   const [c, g] = canvas(1024, 1024);
   let s = seed;
@@ -71,6 +74,7 @@ export function makeBranchTexture(seed = 3) {
   return tex(c);
 }
 
+// Dark mossy ground
 export function makeGroundTexture() {
   const [c, g] = canvas(512, 512);
   g.fillStyle = "#120c18";
@@ -83,5 +87,107 @@ export function makeGroundTexture() {
   const t = tex(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(20, 20);
+  return t;
+}
+
+// Dark polished stone slab with soft marbling, used for interior floors
+export function makeStoneTexture(seed = 7) {
+  const [c, g] = canvas(512, 512);
+  let s = seed;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  g.fillStyle = "#241019";
+  g.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 200; i++) {
+    const x = rnd() * 512;
+    const y = rnd() * 512;
+    const r = 20 + rnd() * 90;
+    const grd = g.createRadialGradient(x, y, 0, x, y, r);
+    const light = rnd() > 0.5;
+    grd.addColorStop(0, light ? "rgba(120,84,96,0.10)" : "rgba(8,3,7,0.16)");
+    grd.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = grd;
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  // veins
+  g.strokeStyle = "rgba(196,168,140,0.07)";
+  for (let v = 0; v < 14; v++) {
+    g.beginPath();
+    let x = rnd() * 512;
+    let y = rnd() * 512;
+    g.moveTo(x, y);
+    for (let k = 0; k < 6; k++) {
+      x += (rnd() - 0.5) * 150;
+      y += (rnd() - 0.5) * 150;
+      g.lineTo(x, y);
+    }
+    g.lineWidth = 0.6 + rnd() * 1.4;
+    g.stroke();
+  }
+  // slab joints
+  g.strokeStyle = "rgba(0,0,0,0.45)";
+  g.lineWidth = 2;
+  for (let i = 1; i < 4; i++) {
+    g.beginPath();
+    g.moveTo((512 / 4) * i, 0);
+    g.lineTo((512 / 4) * i, 512);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(0, (512 / 4) * i);
+    g.lineTo(512, (512 / 4) * i);
+    g.stroke();
+  }
+  const t = tex(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.repeat.set(3, 3);
+  return t;
+}
+
+/**
+ * Burgundy stair carpet with an antique-gold border, laid down the middle of the
+ * hall. Canvas-generated so the look ships without an extra asset.
+ */
+export function makeCarpetTexture() {
+  const [c, g] = canvas(1024, 1024);
+  const base = g.createLinearGradient(0, 0, 1024, 0);
+  base.addColorStop(0, "#3d0a16");
+  base.addColorStop(0.5, "#5a1020");
+  base.addColorStop(1, "#3d0a16");
+  g.fillStyle = base;
+  g.fillRect(0, 0, 1024, 1024);
+
+  // woven noise
+  let s = 11;
+  const rnd = () => ((s = (s * 9301 + 49297) % 233280) / 233280);
+  for (let i = 0; i < 9000; i++) {
+    const x = rnd() * 1024;
+    const y = rnd() * 1024;
+    g.fillStyle = rnd() > 0.5 ? "rgba(120,30,45,0.25)" : "rgba(24,4,10,0.30)";
+    g.fillRect(x, y, 2, 2);
+  }
+
+  // gold border, double rule
+  g.strokeStyle = "#c9a45c";
+  g.lineWidth = 14;
+  g.strokeRect(34, 34, 1024 - 68, 1024 - 68);
+  g.strokeStyle = "#8d6c33";
+  g.lineWidth = 5;
+  g.strokeRect(64, 64, 1024 - 128, 1024 - 128);
+
+  // corner scrolls
+  g.fillStyle = "#c9a45c";
+  for (const [cx, cy, sx, sy] of [[70, 70, 1, 1], [954, 70, -1, 1], [70, 954, 1, -1], [954, 954, -1, -1]]) {
+    g.beginPath();
+    g.arc(cx + sx * 46, cy + sy * 46, 30, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "#5a1020";
+    g.beginPath();
+    g.arc(cx + sx * 46, cy + sy * 46, 17, 0, Math.PI * 2);
+    g.fill();
+    g.fillStyle = "#c9a45c";
+  }
+
+  const t = tex(c);
+  t.wrapS = THREE.ClampToEdgeWrapping;
+  t.wrapT = THREE.RepeatWrapping;
   return t;
 }

@@ -1,0 +1,58 @@
+.screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #070409;
+  color: #f2e4c8;
+  font-family: "Cinzel", "Cormorant Garamond", Georgia, serif;
+}
+
+.screen canvas {
+  display: block;
+  touch-action: none;
+}
+
+.loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0b0710;
+  color: #d9b26a;
+  font-size: 0.85rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.exit {
+  position: absolute;
+  top: 1.8rem;
+  right: 1.8rem;
+  z-index: 5;
+  background: rgba(18, 8, 17, 0.75);
+  border: 1px solid rgba(211, 172, 99, 0.65);
+  border-radius: 2px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+  font-size: 0.7rem;
+  letter-spacing: 0.13em;
+  color: #f2e4c8;
+  cursor: pointer;
+}
+
+.exit:hover {
+  background: rgba(54, 19, 39, 0.9);
+}
+
+.arrived {
+  position: absolute;
+  bottom: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  pointer-events: none;
+  color: #edd4a7;
+  letter-spacing: 0.21em;
+  font-size: 0.85rem;
+  text-shadow: 0 2px 14px #000;
+}
