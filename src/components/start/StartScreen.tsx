@@ -52,39 +52,39 @@ export default function StartScreen({ onStart }: { onStart: () => void }) {
 
   return (
     <div className={`${styles.screen} ${leaving ? styles.leaving : ""}`} data-scene-ready={ready || undefined}>
-      
-      <Canvas className={styles.canvas} shadows dpr={[1, 1.75]}  camera={{ 
-        position: CAM_BASE.toArray(), 
-        fov: 42, 
-        near: 0.1, far: 200 
-      }} 
-      gl={{
+      <Canvas className={styles.canvas} shadows dpr={[1, 1.75]}
+        camera={{
+          position: CAM_BASE.toArray(),
+          fov: 42,
+          near: 0.1,
+          far: 200,
+        }}
+        gl={{
           antialias: true,
           toneMapping: THREE.ACESFilmicToneMapping,
           toneMappingExposure: 1.25,
         }}>
-
-        <MansionEnvironment />
-        <CameraRig />
+        <MansionEnvironment/>
+        <CameraRig/>
         <Suspense fallback={null}>
-          <MoonLayer />
-          <MansionScene onReady={handleReady} />
+          <MoonLayer/>
+          <MansionScene onReady={handleReady}/>
         </Suspense>
       </Canvas>
 
       <div className={styles.vignette} />
 
       <div className={styles.soundToggle}>
-        <SoundToggle />
+        <SoundToggle/>
       </div>
 
       <div className={styles.ui}>
-        <Ornament />
+        <Ornament/>
         <h1 className={styles.title}>
           <span className={styles.small}>The Last</span>
           <span className={styles.big}>Invitation</span>
         </h1>
-        <Ornament flip />
+        <Ornament flip/>
         <button type="button" className={styles.start} {...uiSound} onClick={handleStart}>
           <span>Start</span>
         </button>

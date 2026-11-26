@@ -20,7 +20,6 @@ function Bird({ position, speed, delay, scale }: BirdProps) {
     const t = clock.elapsedTime * speed + delay;
     const progress = (t % 18) / 18;
 
-    // wing flutter each time this bird starts a new pass across the sky
     const loop = Math.floor(t / 18);
     if (lastLoop.current !== -1 && loop !== lastLoop.current) {
       if (Math.random() < 0.6) sound.flutter();

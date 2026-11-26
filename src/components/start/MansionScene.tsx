@@ -29,7 +29,9 @@ function Mansion() {
       if (!mesh.isMesh) return;
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const mats = Array.isArray(mesh.material)
+        ? mesh.material
+        : [mesh.material];
       mats.forEach((mat) => {
         const std = mat as THREE.MeshStandardMaterial;
         const name = `${std.name} ${mesh.name}`.toLowerCase();
@@ -48,7 +50,7 @@ function Mansion() {
       <primitive object={model} />
       {[-3, 0, 3].map((x) =>
         [2, 5.5].map((y) => (
-          <pointLight key={`${x}-${y}`} position={[x, y, depth / 2 - 0.6]} color="#ff40c8" intensity={6} distance={6} decay={1.6} />
+          <pointLight key={`${x}-${y}`} position={[x, y, depth / 2 - 0.6]} color="#ff40c8"intensity={6} distance={6} decay={1.6}/>
         )),
       )}
     </group>
@@ -58,7 +60,9 @@ function Mansion() {
 function Path() {
   const { scene } = useGLTF(MODELS.path);
   const model = useMemo(() => {
-    const raw = new THREE.Box3().setFromObject(scene).getSize(new THREE.Vector3());
+    const raw = new THREE.Box3()
+      .setFromObject(scene)
+      .getSize(new THREE.Vector3());
     const m = fitModel(scene, LAYOUT.pathLength, "length");
     if (raw.x > raw.z) m.children[0].rotation.y = Math.PI / 2;
     m.traverse((o) => {
@@ -71,7 +75,9 @@ function Path() {
     });
     return m;
   }, [scene]);
-  return <primitive object={model} position={[LAYOUT.mansionX, 0.02, LAYOUT.pathLength / 2 + 0.5]} />;
+  return (
+    <primitive object={model} position={[LAYOUT.mansionX, 0.02, LAYOUT.pathLength / 2 + 0.5]}/>
+  );
 }
 
 function Railings() {
@@ -83,8 +89,8 @@ function Railings() {
   }, [scene]);
   return (
     <>
-      <primitive object={left} position={[-2.6, 0, 10.5]} rotation={[0, Math.PI / 2.4, 0]} />
-      <primitive object={right} position={[8.4, 0, 11]} rotation={[0, -Math.PI / 2.4, 0]} />
+      <primitive object={left} position={[-2.6, 0, 10.5]} rotation={[0, Math.PI / 2.4, 0]}/>
+      <primitive object={right} position={[8.4, 0, 11]} rotation={[0, -Math.PI / 2.4, 0]}/>
     </>
   );
 }
@@ -96,12 +102,17 @@ function Lamps() {
     [LAYOUT.mansionX + 2, 0.9],
     [LAYOUT.mansionX + 4.6, 10.5],
   ];
-  const lamps = useMemo(() => spots.map(() => fitModel(scene, LAYOUT.lampHeight, "height")), [scene]);
+  const lamps = useMemo(
+    () => spots.map(() => fitModel(scene, LAYOUT.lampHeight, "height")),
+    [scene],
+  );
   const lights = useRef<THREE.PointLight[]>([]);
   useFrame(({ clock }) => {
     const t = clock.elapsedTime;
     lights.current.forEach((l, i) => {
-      if (l) l.intensity = 9 + Math.sin(t * 7 + i * 2) * 0.8 + Math.sin(t * 13 + i) * 0.5;
+      if (l)
+        l.intensity =
+          9 + Math.sin(t * 7 + i * 2) * 0.8 + Math.sin(t * 13 + i) * 0.5;
     });
   });
   return (
@@ -110,7 +121,9 @@ function Lamps() {
         <group key={i} position={[x, 0, z]}>
           <primitive object={lamps[i]} />
           <pointLight
-            ref={(l) => { if (l) lights.current[i] = l; }}
+            ref={(l) => {
+              if (l) lights.current[i] = l;
+            }}
             position={[0, LAYOUT.lampHeight * 0.85, 0.2]}
             color="#ffa040"
             distance={7}

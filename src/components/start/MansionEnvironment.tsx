@@ -3,9 +3,15 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { fitModel } from "../../utils/fitModel";
-import { makeBranchTexture,  makeCloudTexture, makeGlowTexture, makeGroundTexture,} from "../../utils/textures";
+import {
+  makeBranchTexture,
+  makeCloudTexture,
+  makeGlowTexture,
+  makeGroundTexture,
+} from "../../utils/textures";
 import FlyingBirds from "./FlyingBirds";
 import { sound } from "../../audio/SoundEngine";
+import { createStorm, stepStorm } from "../../utils/storm";
 
 const MOON_POS = new THREE.Vector3(-1.2, 20.5, -24);
 
@@ -55,7 +61,13 @@ function Stars() {
   }, []);
   return (
     <points geometry={geo}>
-      <pointsMaterial size={0.25} color="#d8c8ff" transparent opacity={0.7} fog={false}/>
+      <pointsMaterial
+        size={0.25}
+        color="#d8c8ff"
+        transparent
+        opacity={0.7}
+        fog={false}
+      />
     </points>
   );
 }
@@ -217,33 +229,14 @@ function Lights() {
 
 function Lightning() {
   const light = useRef<THREE.DirectionalLight>(null);
-  const timer = useRef(0);
-  const nextStorm = useRef(6);
+  const storm = useRef(createStorm());
 
   useFrame((_, delta) => {
-    nextStorm.current -= delta;
-
-    if (nextStorm.current <= 0 && timer.current <= 0) {
-      timer.current = 2.5;
-      nextStorm.current = 5 + Math.random() * 5;
-      // crack now, rolling thunder shortly after, sometimes a crow answers
+    const intensity = stepStorm(storm.current, delta, () => {
       sound.thunder(0.05);
       sound.thunder(1.2);
       if (Math.random() < 0.5) sound.crow();
-    }
-    let intensity = 0;
-
-    if (timer.current > 0) {
-      timer.current = Math.max(0, timer.current - delta);
-
-      const elapsed = 2.5 - timer.current;
-      const flash1 = elapsed < 0.15;
-      const flash2 = elapsed > 0.4 && elapsed < 0.65;
-      const flash3 = elapsed > 1.1 && elapsed < 1.35;
-      const flash4 = elapsed > 1.8 && elapsed < 2.15;
-      intensity = flash1 || flash2 || flash3 || flash4 ? 9 : 0.4;
-    }
-
+    });
     if (light.current) {
       light.current.intensity = intensity;
     }
