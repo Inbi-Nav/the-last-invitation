@@ -13,7 +13,6 @@ function tex(c: HTMLCanvasElement) {
   return t;
 }
 
-// Soft radial glow
 export function makeGlowTexture(inner = "rgba(255,255,255,1)", outer = "rgba(255,255,255,0)") {
   const [c, g] = canvas(256, 256);
   const grd = g.createRadialGradient(128, 128, 0, 128, 128, 128);
@@ -24,7 +23,6 @@ export function makeGlowTexture(inner = "rgba(255,255,255,1)", outer = "rgba(255
   return tex(c);
 }
 
-// Puffy cloud / fog blob built from overlapping soft circles
 export function makeCloudTexture(seed = 1) {
   const [c, g] = canvas(512, 256);
   let s = seed;
@@ -42,7 +40,6 @@ export function makeCloudTexture(seed = 1) {
   return tex(c);
 }
 
-// Twisted tree branches silhouette, growing from the left edge
 export function makeBranchTexture(seed = 3) {
   const [c, g] = canvas(1024, 1024);
   let s = seed;
@@ -74,7 +71,6 @@ export function makeBranchTexture(seed = 3) {
   return tex(c);
 }
 
-// Dark mossy ground
 export function makeGroundTexture() {
   const [c, g] = canvas(512, 512);
   g.fillStyle = "#120c18";
