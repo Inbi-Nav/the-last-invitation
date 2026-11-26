@@ -1,6 +1,23 @@
-type Ambience = "none" | "exterior" | "interior";
+type Ambience = "none" | "exterior" | "interior" | "lobby";
 
 const MUTE_KEY = "tli-muted";
+const VOL_KEY = "tli-volumes";
+
+export interface Volumes { master: number; music: number; sfx: number }
+const DEFAULT_VOLUMES: Volumes = { master: 1, music: 1, sfx: 1 };
+const BASE = { master: 0.9, music: 0.55, sfx: 0.8 };
+
+function loadVolumes(): Volumes {
+  try {
+    const raw = typeof localStorage !== "undefined" ? localStorage.getItem(VOL_KEY) : null;
+    if (!raw) return { ...DEFAULT_VOLUMES };
+    const v = JSON.parse(raw) as Partial<Volumes>;
+    const clamp = (n: unknown, d: number) => (typeof n === "number" && n >= 0 && n <= 1 ? n : d);
+    return { master: clamp(v.master, 1), music: clamp(v.music, 1), sfx: clamp(v.sfx, 1) };
+  } catch {
+    return { ...DEFAULT_VOLUMES };
+  }
+}
 
 class SoundEngine {
   private ctx: AudioContext | null = null;
@@ -13,6 +30,8 @@ class SoundEngine {
   private current: Ambience = "none";
   private wanted: Ambience = "none";
   private listeners = new Set<(m: boolean) => void>();
+  private volListeners = new Set<(v: Volumes) => void>();
+  volumes: Volumes = loadVolumes();
   muted = typeof localStorage !== "undefined" && localStorage.getItem(MUTE_KEY) === "1";
 
   get unlocked() { return this.ctx !== null && this.ctx.state === "running"; }
@@ -22,14 +41,14 @@ class SoundEngine {
       const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       this.ctx = new Ctx();
       this.master = this.ctx.createGain();
-      this.master.gain.value = this.muted ? 0 : 0.9;
+      this.master.gain.value = this.muted ? 0 : BASE.master * this.volumes.master;
       const comp = this.ctx.createDynamicsCompressor();
       this.master.connect(comp).connect(this.ctx.destination);
       this.sfx = this.ctx.createGain();
-      this.sfx.gain.value = 0.8;
+      this.sfx.gain.value = BASE.sfx * this.volumes.sfx;
       this.sfx.connect(this.master);
       this.amb = this.ctx.createGain();
-      this.amb.gain.value = 0.55;
+      this.amb.gain.value = BASE.music * this.volumes.music;
       this.amb.connect(this.master);
       const len = this.ctx.sampleRate * 3;
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -43,10 +62,23 @@ class SoundEngine {
   setMuted(m: boolean) {
     this.muted = m;
     localStorage.setItem(MUTE_KEY, m ? "1" : "0");
-    if (this.ctx && this.master) this.master.gain.setTargetAtTime(m ? 0 : 0.9, this.ctx.currentTime, 0.1);
+    if (this.ctx && this.master) this.master.gain.setTargetAtTime(m ? 0 : BASE.master * this.volumes.master, this.ctx.currentTime, 0.1);
     this.listeners.forEach((l) => l(m));
   }
   onMute(l: (m: boolean) => void) { this.listeners.add(l); return () => { this.listeners.delete(l); }; }
+
+  setVolume(kind: keyof Volumes, value: number) {
+    this.volumes = { ...this.volumes, [kind]: Math.min(1, Math.max(0, value)) };
+    try { localStorage.setItem(VOL_KEY, JSON.stringify(this.volumes)); } catch { }
+    if (this.ctx && this.master && this.sfx && this.amb) {
+      const t = this.ctx.currentTime;
+      if (!this.muted) this.master.gain.setTargetAtTime(BASE.master * this.volumes.master, t, 0.05);
+      this.sfx.gain.setTargetAtTime(BASE.sfx * this.volumes.sfx, t, 0.05);
+      this.amb.gain.setTargetAtTime(BASE.music * this.volumes.music, t, 0.05);
+    }
+    this.volListeners.forEach((l) => l(this.volumes));
+  }
+  onVolumes(l: (v: Volumes) => void) { this.volListeners.add(l); return () => { this.volListeners.delete(l); }; }
 
   private noiseSrc(loop = false) {
     const s = this.ctx!.createBufferSource();
@@ -214,6 +246,7 @@ class SoundEngine {
     this.current = a;
     if (a === "exterior") this.startExterior();
     if (a === "interior") this.startInterior();
+    if (a === "lobby") this.startLobby();
   }
 
   private keep(...n: AudioNode[]) { this.ambienceNodes.push(...n); }
@@ -265,7 +298,7 @@ class SoundEngine {
     this.every(18, 35, () => this.flutter());
   }
 
-  private startInterior() {
+  private startInterior(randomThunder = true) {
     const c = this.ctx!;
     const n = this.noiseSrc(true), lp = c.createBiquadFilter(), g = c.createGain();
     lp.type = "lowpass"; lp.frequency.value = 700;
@@ -286,8 +319,36 @@ class SoundEngine {
       o.connect(og).connect(this.amb!); o.start(t); o.stop(t + 0.06);
     });
     this.drone([65.4, 98, 130.8, 155.6], 0.06); 
-    this.every(25, 50, () => this.thunder(1.5)); 
+    if (randomThunder) this.every(25, 50, () => this.thunder(1.5));
     this.every(30, 60, () => this.creak(c.currentTime));
+  }
+  
+  private startLobby() {
+    this.startInterior(false);
+    const c = this.ctx!;
+    const rain = this.noiseSrc(true), hp = c.createBiquadFilter(), lp = c.createBiquadFilter(), rg = c.createGain();
+    hp.type = "highpass"; hp.frequency.value = 2500;
+    lp.type = "lowpass"; lp.frequency.value = 9000;
+    rain.connect(hp).connect(lp).connect(rg).connect(this.amb!); rain.start();
+    this.fadeIn(rg, 0.05);
+    this.keep(rain, hp, lp, rg);
+    this.drone([73.4, 110, 146.8, 174.6], 0.05);
+
+    // A minor, music-box style. 0 = rest.
+    const melody = [220, 261.6, 329.6, 0, 293.7, 261.6, 220, 0, 246.9, 293.7, 349.2, 0, 329.6, 293.7, 261.6, 0];
+    let step = 0;
+    this.every(1.25, 1.25, () => {
+      const f = melody[step++ % melody.length];
+      if (!f) return;
+      const t = c.currentTime;
+      [1, 2, 3.01].forEach((r, i) => {
+        const o = c.createOscillator(), g = c.createGain();
+        o.type = "sine"; o.frequency.value = f * 2 * r;
+        this.env(g, t, 0.05 / (i + 1), 0.004, 1.6 / (i + 1));
+        o.connect(g).connect(this.amb!);
+        o.start(t); o.stop(t + 1.8);
+      });
+    });
   }
 
   private stopAmbience() {

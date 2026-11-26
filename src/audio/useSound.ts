@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { sound } from "./SoundEngine";
+import { sound, type Volumes } from "./SoundEngine";
 
 type Ambience = Parameters<typeof sound.setAmbience>[0];
 
@@ -20,6 +20,12 @@ export function useMuted() {
   const [muted, setMuted] = useState(sound.muted);
   useEffect(() => sound.onMute(setMuted), []);
   return [muted, (m: boolean) => sound.setMuted(m)] as const;
+}
+
+export function useVolumes() {
+  const [volumes, setVolumes] = useState<Volumes>(sound.volumes);
+  useEffect(() => sound.onVolumes(setVolumes), []);
+  return [volumes, (k: keyof Volumes, v: number) => sound.setVolume(k, v)] as const;
 }
 
 export const uiSound = {

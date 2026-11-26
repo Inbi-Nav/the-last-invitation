@@ -19,6 +19,7 @@
     box-shadow 0.2s,
     border-color 0.2s;
 }
+
 .toggle:hover {
   transform: translateY(-1px);
   border-color: var(--gold);
