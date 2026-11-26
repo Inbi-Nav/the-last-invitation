@@ -4,11 +4,16 @@ import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
 import { prepareAsset } from "../../game/prepareAsset";
 import Vegetation from "./Vegetation";
-import { makeGroundTexture, makeGlowTexture, makeStoneTexture } from "../../utils/textures";
+import ExteriorFence from "./ExteriorFence";
+import {
+  makeGroundTexture,
+  makeGlowTexture,
+  makeStoneTexture,
+} from "../../utils/textures";
 
 export const EXTERIOR_SCALE = 11.6;
 export const EXTERIOR_Z = -34;
-const FRONT_Z = EXTERIOR_Z + 0.823 * EXTERIOR_SCALE; 
+const FRONT_Z = EXTERIOR_Z + 0.823 * EXTERIOR_SCALE;
 
 function useFog(color: string, near: number, far: number) {
   const scene = useThree((state) => state.scene);
@@ -66,6 +71,7 @@ function Sky() {
 
       <points geometry={stars} renderOrder={-1}>
         <pointsMaterial color="#ccd4ff" size={1.7} sizeAttenuation={false} transparent opacity={0.72} fog={false} toneMapped={false} depthWrite={false}/>
+
       </points>
     </>
   );
@@ -108,38 +114,7 @@ function Ground() {
 }
 
 function Approach() {
-  const gate = useGLTF("/architecture/outside-path.glb");
-  const railing = useGLTF("/architecture/outside-railing.glb");
-  const gateModel = useMemo(
-    () =>
-      prepareAsset(gate.scene.clone(true), { emissive: 0.62, roughness: 0.9 }),
-    [gate.scene],
-  );
-  const railings = useMemo(
-    () =>
-      Array.from({ length: 6 }, () =>
-        prepareAsset(railing.scene.clone(true), {
-          emissive: 0.6,
-          roughness: 0.9,
-        }),
-      ),
-    [railing.scene],
-  );
-
-  return (
-    <group>
-      <group position={[0, 0, FRONT_Z + 2.2]} scale={[3.5, 3.4, 3.5]}>
-        <primitive object={gateModel} />
-      </group>
-      {[-1, 1].map((side) =>
-        [-18, -12, -6].map((z, index) => (
-          <group key={`${side}-${z}`} position={[side * 3.9, 0, z]} rotation={[0, Math.PI / 2, 0]} scale={[2.1, 2.6, 2.1]}>
-            <primitive object={railings[(side === -1 ? 0 : 3) + index]}/>
-          </group>
-        )),
-      )}
-    </group>
-  );
+  return <ExteriorFence />;
 }
 
 const MOON_POSITION: [number, number, number] = [26, 54, -148];
@@ -184,6 +159,7 @@ function Moon() {
       </sprite>
       <sprite scale={[19, 19, 1]}>
         <spriteMaterial map={core} transparent opacity={0.5} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false} fog={false}/>
+
       </sprite>
       <pointLight color="#c9d6ff" intensity={340} distance={110} decay={1.2} />
     </group>
@@ -193,17 +169,21 @@ function Moon() {
 function ExteriorLights() {
   return (
     <>
-      <hemisphereLight args={["#6b5a9e", "#1a1020", 1.55]}/>
-      
-      <ambientLight color="#7a6a9c" intensity={0.7}/>
-      
+      <hemisphereLight args={["#6b5a9e", "#1a1020", 1.55]} />
+
+      <ambientLight color="#7a6a9c" intensity={0.7} />
+
       <directionalLight position={[38, 46, -66]} color="#d3dcff" intensity={3.1} castShadow shadow-mapSize={[1024, 1024]}>
+
         <orthographicCamera attach="shadow-camera" args={[-30, 30, 30, -30, 1, 120]}/>
       </directionalLight>
       {}
-      <pointLight position={[0, 4.6, FRONT_Z + 2]} color="#ffc282" intensity={150} distance={30} decay={1.6}/>
+
+      <pointLight
+        position={[0, 4.6, FRONT_Z + 2]} color="#ffc282" intensity={150} distance={30} decay={1.6}/>
 
       <pointLight position={[0, 3.2, FRONT_Z + 6]} color="#ffd9a0" intensity={60} distance={20} decay={1.7}/>
+
       {}
       <pointLight position={[-7, 2.4, FRONT_Z + 1.4]} color="#ffb877" intensity={70} distance={16} decay={1.7}/>
 
@@ -230,6 +210,5 @@ export default function ExteriorSet() {
 }
 
 useGLTF.preload("/models/mansion.glb");
-useGLTF.preload("/architecture/outside-path.glb");
 useGLTF.preload("/architecture/outside-railing.glb");
 useGLTF.preload("/architecture/moon.glb");

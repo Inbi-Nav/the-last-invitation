@@ -35,6 +35,13 @@ export default function EntranceTransition({
   });
 
   return (
-    <pointLight ref={light} position={[0, 3.3, FRONT_Z - 0.8]} color="#fff1d8" intensity={0} distance={32} decay={1.4}/>
+    <pointLight
+      ref={light}
+      position={[0, 3.3, FRONT_Z - 0.8]}
+      color="#fff1d8"
+      intensity={0}
+      distance={32}
+      decay={1.4}
+    />
   );
 }

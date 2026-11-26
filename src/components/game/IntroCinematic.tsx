@@ -73,10 +73,10 @@ export default function IntroCinematic({
       const k = ease(clamp01((t - DESCEND_END) / (DOLLY_END - DESCEND_END)));
       camera.position.set(
         Math.sin(t * 0.7) * 0.05,
-        THREE.MathUtils.lerp(5.2, 3.05, k),
+        THREE.MathUtils.lerp(5.2, 3.6, k),
         THREE.MathUtils.lerp(7.5, FRONT_Z + 1.6, k),
       );
-      lookAt.set(0, THREE.MathUtils.lerp(4.6, 3.4, k), FRONT_Z);
+      lookAt.set(0, THREE.MathUtils.lerp(4.6, 3.6, k), FRONT_Z);
       camera.lookAt(lookAt);
     }
 

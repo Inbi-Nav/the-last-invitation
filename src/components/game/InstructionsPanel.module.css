@@ -46,7 +46,6 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 1rem;
   font-size: 0.78rem;
   letter-spacing: 0.1em;
   color: #cbb691;
@@ -56,7 +55,6 @@
   color: #f0d9a0;
   font-weight: 600;
   letter-spacing: 0.16em;
-  white-space: nowrap;
 }
 
 .hint {

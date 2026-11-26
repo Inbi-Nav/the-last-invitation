@@ -37,12 +37,16 @@ export default function GameSettingsMenu({
 
   return (
     <div className={styles.backdrop} role="presentation" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
+
       <GothicPanel className={styles.dialog}>
         <div role="dialog" aria-modal="true" aria-label="Game settings" className={styles.inner}>
+
           <h2 className={styles.title}>Settings</h2>
           <Divider className={styles.divider} />
 
-          <button type="button" className={`${styles.mute} ${muted ? styles.muteOn : ""}`} aria-pressed={muted} {...uiSound} onClick={() => setMuted(!muted)}>
+          <button type="button" className={`${styles.mute} ${muted ? styles.muteOn : ""}`} aria-pressed={muted}
+            {...uiSound} onClick={() => setMuted(!muted)}>
+
             {muted ? <IconSpeakerOff size={22} /> : <IconSpeaker size={22} />}
             <span>{muted ? "Sound muted" : "Sound on"}</span>
             <em>{muted ? "Unmute" : "Mute"}</em>
@@ -54,11 +58,11 @@ export default function GameSettingsMenu({
                 {label}
                 <b>{Math.round(volumes[key] * 100)}%</b>
               </span>
-              <input type="range" min={0} max={100} value={Math.round(volumes[key] * 100)} disabled={muted} style={
+              <input type="range" min={0} max={100} value={Math.round(volumes[key] * 100)} disabled={muted}
+                style={
                   { "--fill": `${volumes[key] * 100}%` } as React.CSSProperties
-                }
-                onChange={(e) => setVolume(key, Number(e.target.value) / 100)} onPointerUp={() => { sound.unlock();
-
+                } onChange={(e) => setVolume(key, Number(e.target.value) / 100)} onPointerUp={() => {
+                  sound.unlock();
                   if (key !== "music") sound.click();
                 }}
               />
@@ -67,11 +71,21 @@ export default function GameSettingsMenu({
 
           <Divider className={styles.divider} />
 
-          <button type="button" className={styles.menuBtn} {...uiSound} onClick={onShowControls}>
+          <button
+            type="button"
+            className={styles.menuBtn}
+            {...uiSound}
+            onClick={onShowControls}
+          >
             <span>Controls</span>
           </button>
 
-          <button type="button" className={styles.menuBtn} {...uiSound} onClick={onExit}>
+          <button
+            type="button"
+            className={styles.menuBtn}
+            {...uiSound}
+            onClick={onExit}
+          >
             <span className={styles.exitRow}>
               <IconExit size={18} />
               Exit to Lobby
@@ -79,7 +93,11 @@ export default function GameSettingsMenu({
           </button>
         </div>
 
-        <IconButton label="Close settings" className={styles.close} onClick={onClose}>
+        <IconButton
+          label="Close settings"
+          className={styles.close}
+          onClick={onClose}
+        >
           <IconClose />
         </IconButton>
       </GothicPanel>

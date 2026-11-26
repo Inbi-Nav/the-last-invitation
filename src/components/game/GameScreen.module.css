@@ -33,6 +33,74 @@
   gap: 0.6rem;
 }
 
+.equipment {
+  position: absolute;
+  bottom: 1.4rem;
+  left: 1.4rem;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(18, 8, 17, 0.72);
+  border: 1px solid rgba(211, 172, 99, 0.45);
+  border-radius: 2px;
+  padding: 0.55rem 0.85rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  pointer-events: none;
+}
+
+.equipment span {
+  color: #cbb691;
+  text-transform: uppercase;
+}
+
+.equipment b {
+  color: #ffd98a;
+  font-weight: 600;
+}
+
+.equipment em {
+  font-style: normal;
+  color: #9d8a6b;
+  font-size: 0.6rem;
+}
+
+.prompt {
+  position: absolute;
+  bottom: 5.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(18, 8, 17, 0.78);
+  border: 1px solid rgba(211, 172, 99, 0.55);
+  border-radius: 2px;
+  padding: 0.6rem 1rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.prompt b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid rgba(211, 172, 99, 0.7);
+  border-radius: 2px;
+  color: #ffd98a;
+  font-weight: 600;
+}
+
+.prompt span {
+  color: #f2e4c8;
+  text-transform: uppercase;
+}
+
 .whiteFade {
   position: absolute;
   inset: 0;
@@ -49,5 +117,15 @@
   z-index: 9;
   background: #050308;
   opacity: 1;
+  pointer-events: none;
+}
+
+.zoneFade {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+  background: #050308;
+  opacity: 0;
+  transition: opacity 0.4s ease;
   pointer-events: none;
 }

@@ -1,30 +1,47 @@
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { GAME_FOV } from "../../game/prepareAsset";
+import { sound } from "../../audio/SoundEngine";
+import { useAmbience } from "../../audio/useSound";
 import ExteriorSet from "./ExteriorSet";
 import IntroCinematic from "./IntroCinematic";
 import EntranceTransition from "./EntranceTransition";
 import MansionInterior from "./MansionInterior";
+import GameStorm from "./GameStorm";
+import GhostFigures from "./GhostFigures";
 import InstructionsPanel from "./InstructionsPanel";
 import GameSettingsMenu from "./GameSettingsMenu";
 import { loadInterior } from "./interiorModel";
+import { createStorm } from "../../utils/storm";
 import { IconButton } from "../ui/Gothic";
 import { IconGear } from "../ui/icons";
 import styles from "./GameScreen.module.css";
 
 type Phase = "loading" | "cinematic" | "arrived" | "interior" | "exploring";
-type InstructionsMode = "start" | "back";
 
 export default function GameScreen({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [whiteIn, setWhiteIn] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [instructionsMode, setInstructionsMode] = useState<InstructionsMode>("start");
+  const [instructionsMode, setInstructionsMode] = useState<"start" | "back">(
+    "start",
+  );
   const [menuOpen, setMenuOpen] = useState(false);
+  const [flashlight, setFlashlight] = useState(false);
+  const storm = useRef(createStorm());
 
-  const begin = useCallback(() => setPhase("cinematic"), []);
+  const inside = phase === "interior" || phase === "exploring";
+  useAmbience(inside ? "interior" : "exterior");
+
+  const begin = useCallback(() => {
+    setPhase("cinematic");
+    sound.unlock();
+    sound.startSting();
+    sound.thunder(0.9);
+  }, []);
+
   const arrive = useCallback(() => setPhase("arrived"), []);
   const onWhite = useCallback(() => setWhiteIn(true), []);
 
@@ -51,8 +68,16 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
     };
   }, [phase]);
 
+  useEffect(() => {
+    if (!inside || menuOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === "KeyF") setFlashlight((v) => !v);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [inside, menuOpen]);
+
   const fpsActive = phase === "exploring" && !menuOpen && !showInstructions;
-  const inside = phase === "interior" || phase === "exploring";
 
   const dismissInstructions = useCallback(() => {
     setShowInstructions(false);
@@ -72,14 +97,19 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
         }}
       >
         <Suspense fallback={null}>
-          {inside ? (
-            <MansionInterior active={fpsActive} />
-          ) : (
+          {!inside && (
             <>
               <ExteriorSet />
-              <IntroCinematic onStart={begin} onArrive={arrive} />
+              {(phase === "loading" || phase === "cinematic") && (
+                <IntroCinematic onStart={begin} onArrive={arrive} />
+              )}
+              <GameStorm storm={storm} />
+              <GhostFigures storm={storm} />
               {phase === "arrived" && <EntranceTransition onWhite={onWhite} />}
             </>
+          )}
+          {inside && (
+            <MansionInterior active={fpsActive} flashlight={flashlight} />
           )}
         </Suspense>
       </Canvas>
@@ -104,7 +134,15 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
       )}
 
       {showInstructions && !menuOpen && (
-        <InstructionsPanel mode={instructionsMode} onDismiss={dismissInstructions} />
+        <InstructionsPanel onStart={dismissInstructions} />
+      )}
+
+      {inside && (
+        <div className={styles.equipment}>
+          <span>Flashlight</span>
+          <b>{flashlight ? "ON" : "OFF"}</b>
+          <em>[F]</em>
+        </div>
       )}
 
       <div className={styles.topRight}>
