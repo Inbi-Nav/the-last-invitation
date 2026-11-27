@@ -42,7 +42,12 @@ function Instanced({
   }, [matrices]);
 
   return (
-    <instancedMesh ref={ref} args={[geometry, material, Math.max(1, matrices.length)]} count={matrices.length} frustumCulled={false}/>
+    <instancedMesh
+      ref={ref}
+      args={[geometry, material, Math.max(1, matrices.length)]}
+      count={matrices.length}
+      frustumCulled={false}
+    />
   );
 }
 
@@ -64,7 +69,13 @@ function plant(): Planting {
   const bushes: THREE.Matrix4[] = [];
   const grass: THREE.Matrix4[] = [];
 
-  const push = (list: THREE.Matrix4[], position: THREE.Vector3, scale: THREE.Vector3, rotY = 0, rotZ = 0) => {
+  const push = (
+    list: THREE.Matrix4[],
+    position: THREE.Vector3,
+    scale: THREE.Vector3,
+    rotY = 0,
+    rotZ = 0,
+  ) => {
     const matrix = new THREE.Matrix4();
     matrix.compose(
       position,
@@ -78,7 +89,11 @@ function plant(): Planting {
   for (let i = 0; i < 96; i += 1) {
     const angle = rand() * Math.PI * 2;
     const radius = 44 + rand() * 52;
-    treeSpots.push({ x: HOUSE.x + Math.sin(angle) * radius, z: HOUSE.z + Math.cos(angle) * radius, far: true });
+    treeSpots.push({
+      x: HOUSE.x + Math.sin(angle) * radius,
+      z: HOUSE.z + Math.cos(angle) * radius,
+      far: true,
+    });
   }
   for (let i = 0; i < 26; i += 1) {
     const side = rand() > 0.5 ? 1 : -1;
@@ -94,7 +109,13 @@ function plant(): Planting {
     const height = (far ? 9 : 7.4) + rand() * (far ? 9 : 4.6);
     const trunkRadius = 0.14 + height * 0.017;
     const lean = (rand() - 0.5) * 0.07;
-    push(trunks, new THREE.Vector3(x, height * 0.42, z), new THREE.Vector3(trunkRadius, height * 0.84, trunkRadius), rand() * 6.283, lean);
+    push(
+      trunks,
+      new THREE.Vector3(x, height * 0.42, z),
+      new THREE.Vector3(trunkRadius, height * 0.84, trunkRadius),
+      rand() * 6.283,
+      lean,
+    );
 
     if (conifer) {
       const tiers = 3;
@@ -162,7 +183,11 @@ function plant(): Planting {
     if (rand() < 0.45) {
       push(
         bushes,
-        new THREE.Vector3(x + (rand() - 0.5) * 2.4, size * 0.4, z + (rand() - 0.5) * 2.4),
+        new THREE.Vector3(
+          x + (rand() - 0.5) * 2.4,
+          size * 0.4,
+          z + (rand() - 0.5) * 2.4,
+        ),
         new THREE.Vector3(size * 0.8, size * 0.62, size * 0.8),
         rand() * 6.283,
       );
@@ -175,8 +200,18 @@ function plant(): Planting {
     const z = -24 + rand() * 44;
     if (!isClear(x, z)) continue;
     const size = 0.42 + rand() * 0.5;
-    push(grass, new THREE.Vector3(x, size * 0.42, z), new THREE.Vector3(size * 0.9, size, size * 0.9), rand() * 6.283);
-    push(grass, new THREE.Vector3(x, size * 0.42, z), new THREE.Vector3(size * 0.9, size, size * 0.9), rand() * 6.283 + Math.PI / 2);
+    push(
+      grass,
+      new THREE.Vector3(x, size * 0.42, z),
+      new THREE.Vector3(size * 0.9, size, size * 0.9),
+      rand() * 6.283,
+    );
+    push(
+      grass,
+      new THREE.Vector3(x, size * 0.42, z),
+      new THREE.Vector3(size * 0.9, size, size * 0.9),
+      rand() * 6.283 + Math.PI / 2,
+    );
   }
 
   return { trunks, conifers, canopies, branches, bushes, grass };
@@ -210,15 +245,28 @@ function Mist() {
     if (!group.current) return;
     group.current.children.forEach((child, index) => {
       const bank = banks[index];
-      child.position.x = bank.position[0] + Math.sin(clock.elapsedTime * bank.speed + bank.phase) * 4.5;
+      child.position.x =
+        bank.position[0] +
+        Math.sin(clock.elapsedTime * bank.speed + bank.phase) * 4.5;
     });
   });
 
   return (
     <group ref={group}>
       {banks.map((bank, index) => (
-        <sprite key={index} position={bank.position} scale={[bank.scale, bank.scale * 0.4, 1]}>
-          <spriteMaterial map={texture} transparent opacity={0.19} depthWrite={false} blending={THREE.AdditiveBlending} toneMapped={false}/>
+        <sprite
+          key={index}
+          position={bank.position}
+          scale={[bank.scale, bank.scale * 0.4, 1]}
+        >
+          <spriteMaterial
+            map={texture}
+            transparent
+            opacity={0.19}
+            depthWrite={false}
+            blending={THREE.AdditiveBlending}
+            toneMapped={false}
+          />
         </sprite>
       ))}
     </group>
@@ -250,7 +298,15 @@ function Fireflies() {
 
   return (
     <points ref={points} geometry={geometry} frustumCulled={false}>
-      <pointsMaterial color="#d8c48a" size={0.09} transparent opacity={0.75} depthWrite={false} blending={THREE.AdditiveBlending} sizeAttenuation/>
+      <pointsMaterial
+        color="#d8c48a"
+        size={0.09}
+        transparent
+        opacity={0.75}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        sizeAttenuation
+      />
     </points>
   );
 }
@@ -272,11 +328,19 @@ function Lanterns() {
         <group key={`${x}-${z}`} position={[x, 0, z]}>
           <mesh position={[0, 1.05, 0]}>
             <cylinderGeometry args={[0.075, 0.13, 2.1, 8]} />
-            <meshStandardMaterial color="#1b1417" roughness={0.72} metalness={0.35} />
+            <meshStandardMaterial
+              color="#1b1417"
+              roughness={0.72}
+              metalness={0.35}
+            />
           </mesh>
           <mesh position={[0, 2.2, 0]}>
             <boxGeometry args={[0.34, 0.42, 0.34]} />
-            <meshStandardMaterial color="#191216" roughness={0.6} metalness={0.4} />
+            <meshStandardMaterial
+              color="#191216"
+              roughness={0.6}
+              metalness={0.4}
+            />
           </mesh>
           <mesh position={[0, 2.2, 0]}>
             <boxGeometry args={[0.2, 0.28, 0.2]} />
@@ -284,9 +348,21 @@ function Lanterns() {
           </mesh>
           <mesh position={[0, 2.48, 0]}>
             <coneGeometry args={[0.26, 0.22, 4]} />
-            <meshStandardMaterial color="#1b1417" roughness={0.7} metalness={0.3} />
+            <meshStandardMaterial
+              color="#1b1417"
+              roughness={0.7}
+              metalness={0.3}
+            />
           </mesh>
-          {lit && <pointLight position={[0, 2.2, 0]} color="#ffb173" intensity={14} distance={8} decay={1.8} />}
+          {lit && (
+            <pointLight
+              position={[0, 2.2, 0]}
+              color="#ffb173"
+              intensity={14}
+              distance={8}
+              decay={1.8}
+            />
+          )}
         </group>
       ))}
     </group>
@@ -298,10 +374,26 @@ export default function Vegetation() {
 
   const materials = useMemo(
     () => ({
-      bark: new THREE.MeshStandardMaterial({ color: "#211917", roughness: 0.95, flatShading: true }),
-      conifer: new THREE.MeshStandardMaterial({ color: "#0e1a15", roughness: 1, flatShading: true }),
-      canopy: new THREE.MeshStandardMaterial({ color: "#131d18", roughness: 1, flatShading: true }),
-      bush: new THREE.MeshStandardMaterial({ color: "#101b15", roughness: 1, flatShading: true }),
+      bark: new THREE.MeshStandardMaterial({
+        color: "#211917",
+        roughness: 0.95,
+        flatShading: true,
+      }),
+      conifer: new THREE.MeshStandardMaterial({
+        color: "#0e1a15",
+        roughness: 1,
+        flatShading: true,
+      }),
+      canopy: new THREE.MeshStandardMaterial({
+        color: "#131d18",
+        roughness: 1,
+        flatShading: true,
+      }),
+      bush: new THREE.MeshStandardMaterial({
+        color: "#101b15",
+        roughness: 1,
+        flatShading: true,
+      }),
       grass: new THREE.MeshStandardMaterial({
         color: "#16221a",
         roughness: 1,
@@ -332,12 +424,36 @@ export default function Vegetation() {
 
   return (
     <group>
-      <Instanced geometry={geometries.trunk} material={materials.bark} matrices={planting.trunks} />
-      <Instanced geometry={geometries.cone} material={materials.conifer} matrices={planting.conifers} />
-      <Instanced geometry={geometries.blob} material={materials.canopy} matrices={planting.canopies} />
-      <Instanced geometry={geometries.branch} material={materials.bark} matrices={planting.branches} />
-      <Instanced geometry={geometries.blob} material={materials.bush} matrices={planting.bushes} />
-      <Instanced geometry={geometries.tuft} material={materials.grass} matrices={planting.grass} />
+      <Instanced
+        geometry={geometries.trunk}
+        material={materials.bark}
+        matrices={planting.trunks}
+      />
+      <Instanced
+        geometry={geometries.cone}
+        material={materials.conifer}
+        matrices={planting.conifers}
+      />
+      <Instanced
+        geometry={geometries.blob}
+        material={materials.canopy}
+        matrices={planting.canopies}
+      />
+      <Instanced
+        geometry={geometries.branch}
+        material={materials.bark}
+        matrices={planting.branches}
+      />
+      <Instanced
+        geometry={geometries.blob}
+        material={materials.bush}
+        matrices={planting.bushes}
+      />
+      <Instanced
+        geometry={geometries.tuft}
+        material={materials.grass}
+        matrices={planting.grass}
+      />
       <Lanterns />
       <Mist />
       <Fireflies />
