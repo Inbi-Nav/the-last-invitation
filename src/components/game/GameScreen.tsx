@@ -8,31 +8,30 @@ import ExteriorSet from "./ExteriorSet";
 import IntroCinematic from "./IntroCinematic";
 import EntranceTransition from "./EntranceTransition";
 import MansionInterior from "./MansionInterior";
+import HauntedRoom from "./HauntedRoom";
 import GameStorm from "./GameStorm";
 import GhostFigures from "./GhostFigures";
 import InstructionsPanel from "./InstructionsPanel";
 import GameSettingsMenu from "./GameSettingsMenu";
-import { loadInterior } from "./interiorModel";
 import { createStorm } from "../../utils/storm";
 import { IconButton } from "../ui/Gothic";
 import { IconGear } from "../ui/icons";
 import styles from "./GameScreen.module.css";
 
-type Phase = "loading" | "cinematic" | "arrived" | "interior" | "exploring";
+type Phase = "loading" | "cinematic" | "arrived" | "interior" | "exploring" | "room";
 
 export default function GameScreen({ onExit }: { onExit: () => void }) {
   const [phase, setPhase] = useState<Phase>("loading");
   const [whiteIn, setWhiteIn] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
-  const [instructionsMode, setInstructionsMode] = useState<"start" | "back">(
-    "start",
-  );
+  const [instructionsMode, setInstructionsMode] = useState<"start" | "back">("start");
   const [menuOpen, setMenuOpen] = useState(false);
   const [flashlight, setFlashlight] = useState(false);
+  const [roomFade, setRoomFade] = useState(false);
   const storm = useRef(createStorm());
 
-  const inside = phase === "interior" || phase === "exploring";
+  const inside = phase === "interior" || phase === "exploring" || phase === "room";
   useAmbience(inside ? "interior" : "exterior");
 
   const begin = useCallback(() => {
@@ -44,10 +43,6 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
 
   const arrive = useCallback(() => setPhase("arrived"), []);
   const onWhite = useCallback(() => setWhiteIn(true), []);
-
-  useEffect(() => {
-    loadInterior().catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (phase !== "arrived") return;
@@ -77,12 +72,23 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [inside, menuOpen]);
 
-  const fpsActive = phase === "exploring" && !menuOpen && !showInstructions;
+  const fpsActive =
+    (phase === "exploring" || phase === "room") && !menuOpen && !showInstructions && !roomFade;
 
   const dismissInstructions = useCallback(() => {
     setShowInstructions(false);
     if (instructionsMode === "start") setPhase("exploring");
   }, [instructionsMode]);
+
+  const enterRoom = useCallback(() => {
+    setRoomFade(true);
+    sound.doorCreak();
+    window.setTimeout(() => {
+      setPhase("room");
+      setRevealed(true);
+      window.setTimeout(() => setRoomFade(false), 350);
+    }, 1100);
+  }, []);
 
   return (
     <div className={styles.screen}>
@@ -108,8 +114,15 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
               {phase === "arrived" && <EntranceTransition onWhite={onWhite} />}
             </>
           )}
-          {inside && (
-            <MansionInterior active={fpsActive} flashlight={flashlight} />
+          {phase === "interior" || phase === "exploring" ? (
+            <MansionInterior
+              active={fpsActive}
+              flashlight={flashlight}
+              onEnterRoom={enterRoom}
+            />
+          ) : null}
+          {phase === "room" && (
+            <HauntedRoom active={fpsActive} flashlight={flashlight} />
           )}
         </Suspense>
       </Canvas>
@@ -132,6 +145,14 @@ export default function GameScreen({ onExit }: { onExit: () => void }) {
           }}
         />
       )}
+
+      <div
+        className={styles.zoneFade}
+        style={{
+          opacity: roomFade ? 1 : 0,
+          transition: roomFade ? "opacity 1s ease" : "opacity 0.9s ease",
+        }}
+      />
 
       {showInstructions && !menuOpen && (
         <InstructionsPanel onStart={dismissInstructions} />

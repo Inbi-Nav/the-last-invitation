@@ -148,6 +148,70 @@ class SoundEngine {
     });
   }
 
+  stairsCreak(ascending: boolean) {
+    if (!this.ready()) return;
+  
+    const ctx = this.ctx!;
+    const t = ctx.currentTime;
+  
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+    const filter = ctx.createBiquadFilter();
+  
+    oscillator.type = "sawtooth";
+  
+    oscillator.frequency.setValueAtTime(
+      ascending ? 115 : 90,
+      t
+    );
+  
+    oscillator.frequency.exponentialRampToValueAtTime(
+      ascending ? 65 : 45,
+      t + 0.35
+    );
+  
+    filter.type = "lowpass";
+    filter.frequency.value = 650;
+  
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.12, t + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+  
+    oscillator.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.sfx!);
+  
+    oscillator.start(t);
+    oscillator.stop(t + 0.42);
+  }
+  
+  doorLocked() {
+    if (!this.ready()) return;
+  
+    const ctx = this.ctx!;
+    const t = ctx.currentTime;
+  
+    const oscillator = ctx.createOscillator();
+    const gain = ctx.createGain();
+  
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(170, t);
+    oscillator.frequency.exponentialRampToValueAtTime(
+      95,
+      t + 0.12
+    );
+  
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.18, t + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  
+    oscillator.connect(gain);
+    gain.connect(this.sfx!);
+  
+    oscillator.start(t);
+    oscillator.stop(t + 0.2);
+  }
+
   doorCreak() { if (this.ready()) this.creak(this.ctx!.currentTime); }
 
   creak(t: number) {
